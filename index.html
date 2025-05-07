@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Will You Be My Valentine?</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8e1e8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            perspective: 1000px;
+        }
+        
+        .card-container {
+            position: relative;
+            width: 300px;
+            height: 400px;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 1s;
+        }
+        
+        .card-container.open {
+            transform: rotateY(180deg);
+        }
+        
+        .card-front, .card-inside {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        .card-front {
+            background-color: #ff6b81;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .card-front h1 {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .heart {
+            width: 150px;
+            height: 150px;
+            background-color: #ff3e6f;
+            transform: rotate(45deg);
+            position: relative;
+            margin: 30px auto;
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .heart:before, .heart:after {
+            content: '';
+            width: 150px;
+            height: 150px;
+            background-color: #ff3e6f;
+            border-radius: 50%;
+            position: absolute;
+        }
+        
+        .heart:before {
+            top: -75px;
+            left: 0;
+        }
+        
+        .heart:after {
+            top: 0;
+            left: -75px;
+        }
+        
+        .card-front p {
+            color: white;
+            font-size: 18px;
+            margin-top: 20px;
+            z-index: 1;
+        }
+        
+        .card-inside {
+            background-color: white;
+            transform: rotateY(180deg);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .card-inside h2 {
+            color: #ff3e6f;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+        
+        .card-inside p {
+            color: #333;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-yes {
+            background-color: #ff3e6f;
+            color: white;
+        }
+        
+        .btn-no {
+            background-color: #ccc;
+            color: #333;
+        }
+        
+        .btn-yes:hover {
+            background-color: #ff6b81;
+            transform: scale(1.1);
+        }
+        
+        .btn-no:hover {
+            background-color: #ddd;
+        }
+        
+        .floating-hearts {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .floating-heart {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #ff3e6f;
+            transform: rotate(45deg);
+            opacity: 0;
+        }
+        
+        .floating-heart:before, .floating-heart:after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            background-color: #ff3e6f;
+            border-radius: 50%;
+            position: absolute;
+        }
+        
+        .floating-heart:before {
+            top: -10px;
+            left: 0;
+        }
+        
+        .floating-heart:after {
+            top: 0;
+            left: -10px;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: rotate(45deg) scale(1);
+            }
+            50% {
+                transform: rotate(45deg) scale(1.1);
+            }
+            100% {
+                transform: rotate(45deg) scale(1);
+            }
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(45deg) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(45deg) scale(0);
+                opacity: 0;
+            }
+        }
+        
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            display: none;
+        }
+        
+        .celebration.active {
+            display: block;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0;
+        }
+        
+        /* Date popup styles */
+        .date-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background-color: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            text-align: center;
+            transition: transform 0.5s;
+            max-width: 90%;
+            width: 350px;
+            border: 3px solid #ff3e6f;
+        }
+        
+        .date-popup.active {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .date-popup h3 {
+            color: #ff3e6f;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .date-popup p {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        .date-popup .big-heart {
+            font-size: 50px;
+            color: #ff3e6f;
+            margin: 15px 0;
+            animation: pulse-text 1.5s infinite;
+        }
+        
+        .date-popup .close-btn {
+            background-color: #ff3e6f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+        
+        .date-popup .close-btn:hover {
+            background-color: #ff6b81;
+            transform: scale(1.1);
+        }
+        
+        @keyframes pulse-text {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card-container" id="card">
+        <div class="card-front">
+            <h1>Will You Be My Valentine?</h1>
+            <div class="heart"></div>
+            <p>Click to open</p>
+        </div>
+        <div class="card-inside">
+            <h2>Happy Valentine's Day!</h2>
+            <p>Every moment with you feels like a dream come true. Your smile brightens my day and your love fills my heart with joy.</p>
+            <p>Will you be my Valentine?</p>
+            <div class="buttons">
+                <button class="btn btn-yes" id="yesBtn">Yes</button>
+                <button class="btn btn-no" id="noBtn">No</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="floating-hearts" id="floatingHearts"></div>
+    <div class="celebration" id="celebration"></div>
+    
+    <div class="date-popup" id="datePopup">
+        <div class="big-heart">❤️</div>
+        <h3>It's a date!</h3>
+        <p>Let's meet on <strong>February 14th at 7:00 PM</strong></p>
+        <p>I'll pick you up for a special dinner at that romantic restaurant you love.</p>
+        <p>I can't wait to see you! ❤️</p>
+        <button class="close-btn" id="closePopup">Can't wait!</button>
+    </div>
+    
+    <script>
+        const card = document.getElementById('card');
+        const yesBtn = document.getElementById('yesBtn');
+        const noBtn = document.getElementById('noBtn');
+        const floatingHearts = document.getElementById('floatingHearts');
+        const celebration = document.getElementById('celebration');
+        const datePopup = document.getElementById('datePopup');
+        const closePopup = document.getElementById('closePopup');
+        let noCount = 0;
+        
+        // Open card on click
+        card.addEventListener('click', function() {
+            if (!card.classList.contains('open')) {
+                card.classList.add('open');
+            }
+        });
+        
+        // Create floating hearts
+        function createFloatingHearts() {
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const heart = document.createElement('div');
+                    heart.classList.add('floating-heart');
+                    
+                    // Random position
+                    const left = Math.random() * 100;
+                    heart.style.left = `${left}%`;
+                    heart.style.bottom = '-20px';
+                    
+                    // Random size
+                    const size = Math.random() * 15 + 10;
+                    heart.style.width = `${size}px`;
+                    heart.style.height = `${size}px`;
+                    
+                    // Random color
+                    const hue = Math.random() * 60 + 330; // Red to pink range
+                    heart.style.backgroundColor = `hsl(${hue}, 100%, 65%)`;
+                    heart.style.setProperty('--heart-color', `hsl(${hue}, 100%, 65%)`);
+                    
+                    // Random animation duration
+                    const duration = Math.random() * 3 + 2;
+                    heart.style.animation = `float ${duration}s linear forwards`;
+                    
+                    // Add to container
+                    floatingHearts.appendChild(heart);
+                    
+                    // Remove after animation
+                    setTimeout(() => {
+                        heart.remove();
+                    }, duration * 1000);
+                    
+                }, i * 300);
+            }
+        }
+        
+        // Create confetti for celebration
+        function createConfetti() {
+            celebration.classList.add('active');
+            
+            for (let i = 0; i < 200; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                
+                // Random position
+                const left = Math.random() * 100;
+                confetti.style.left = `${left}%`;
+                confetti.style.top = '-10px';
+                
+                // Random size
+                const size = Math.random() * 8 + 5;
+                confetti.style.width = `${size}px`;
+                confetti.style.height = `${size}px`;
+                
+                // Random color
+                const colors = ['#ff3e6f', '#ff6b81', '#ffb8c6', '#f8e1e8', '#ffffff', '#ffda79', '#fffa65'];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.backgroundColor = color;
+                
+                // Random shape
+                const shapes = ['circle', 'square', 'triangle'];
+                const shape = shapes[Math.floor(Math.random() * shapes.length)];
+                if (shape === 'circle') {
+                    confetti.style.borderRadius = '50%';
+                } else if (shape === 'triangle') {
+                    confetti.style.width = '0';
+                    confetti.style.height = '0';
+                    confetti.style.borderLeft = `${size/2}px solid transparent`;
+                    confetti.style.borderRight = `${size/2}px solid transparent`;
+                    confetti.style.borderBottom = `${size}px solid ${color}`;
+                    confetti.style.backgroundColor = 'transparent';
+                }
+                
+                // Random animation
+                const duration = Math.random() * 3 + 2;
+                const delay = Math.random() * 3;
+                confetti.style.animation = `
+                    confetti-fall ${duration}s ease-in ${delay}s forwards,
+                    confetti-shake ${duration/5}s ease-in-out ${delay}s infinite alternate
+                `;
+                confetti.style.opacity = '1';
+                
+                // Add to container
+                celebration.appendChild(confetti);
+                
+                // Remove after animation
+                setTimeout(() => {
+                    confetti.remove();
+                }, (duration + delay) * 1000);
+            }
+            
+            // Remove celebration after all confetti are gone
+            setTimeout(() => {
+                celebration.classList.remove('active');
+                while (celebration.firstChild) {
+                    celebration.removeChild(celebration.firstChild);
+                }
+            }, 6000);
+        }
+        
+        // Yes button click
+        yesBtn.addEventListener('click', function() {
+            // Hide the No button
+            noBtn.style.display = 'none';
+            
+            // Change the message
+            const message = document.querySelector('.card-inside p:nth-child(2)');
+            message.textContent = "You've made me the happiest person in the world! I can't wait to spend this special day with you.";
+            
+            // Create celebration effects
+            createFloatingHearts();
+            createConfetti();
+            
+            // Show date popup after a short delay
+            setTimeout(() => {
+                datePopup.classList.add('active');
+            }, 1500);
+            
+            // Add keyframe animation for confetti fall and shake
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes confetti-fall {
+                    0% {
+                        transform: translateY(0) rotate(0);
+                        opacity: 1;
+                    }
+                    100% {
+                        transform: translateY(100vh) rotate(360deg);
+                        opacity: 0;
+                    }
+                }
+                
+                @keyframes confetti-shake {
+                    0% {
+                        transform: translateX(0);
+                    }
+                    100% {
+                        transform: translateX(20px);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        });
+        
+        // Close popup button
+        closePopup.addEventListener('click', function() {
+            datePopup.classList.remove('active');
+        });
+        
+        // No button click - count and show pleading messages without moving
+        noBtn.addEventListener('click', function(e) {
+            // Prevent default behavior and stop propagation
+            e.preventDefault();
+            e.stopPropagation();
+            
+            noCount++;
+            
+            // Array of pleading messages with emojis
+            const pleadingMessages = [
+                "Please? 🥺",
+                "Pretty please? 😢",
+                "Don't break my heart! 💔",
+                "I'm begging you! 🙏",
+                "Just one chance? 😭",
+                "My heart can't take it! ❤️‍🩹",
+                "You're killing me! 😫",
+                "I'll cry! 😢",
+                "Please reconsider! 🥹",
+                "I'll be the best Valentine ever! 🌹"
+            ];
+            
+            // Get message based on count (cycle through if more than array length)
+            const messageIndex = (noCount - 1) % pleadingMessages.length;
+            const message = pleadingMessages[messageIndex];
+            
+            // Update button text with count and message
+            noBtn.textContent = `${message} (${noCount})`;
+            
+            // Make the Yes button bigger with each No
+            const currentSize = parseFloat(window.getComputedStyle(yesBtn).fontSize);
+            yesBtn.style.fontSize = `${currentSize * 1.05}px`;
+            yesBtn.style.padding = `${10 + Math.min(noCount, 15)}px ${20 + Math.min(noCount, 20)}px`;
+            
+            // Create a sad floating heart
+            const heart = document.createElement('div');
+            heart.innerHTML = '💔';
+            heart.style.position = 'absolute';
+            heart.style.fontSize = '24px';
+            heart.style.left = `${Math.random() * 100}%`;
+            heart.style.top = `${Math.random() * 100}%`;
+            heart.style.animation = 'float 3s linear forwards';
+            heart.style.zIndex = '300';
+            document.body.appendChild(heart);
+            
+            setTimeout(() => {
+                heart.remove();
+            }, 3000);
+            
+            return false;
+        });
+        
+        // Start with some floating hearts
+        setTimeout(createFloatingHearts, 1000);
+    </script>
+</body>
+</html>
+</div>
+    
+<script>
+    // ... existing code ...
+    
+    // Start with some floating hearts
+    setTimeout(createFloatingHearts, 1000);
+    
+    // Generate a shareable link
+    const shareLink = document.createElement('div');
+    shareLink.style.position = 'fixed';
+    shareLink.style.bottom = '10px';
+    shareLink.style.left = '50%';
+    shareLink.style.transform = 'translateX(-50%)';
+    shareLink.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+    shareLink.style.padding = '8px 15px';
+    shareLink.style.borderRadius = '20px';
+    shareLink.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.2)';
+    shareLink.style.fontSize = '14px';
+    shareLink.style.zIndex = '100';
+    
+    // Create the link text
+    const linkText = document.createElement('a');
+    linkText.href = window.location.href;
+    linkText.textContent = 'Share this Valentine';
+    linkText.style.color = '#ff3e6f';
+    linkText.style.textDecoration = 'none';
+    linkText.style.fontWeight = 'bold';
+    
+    // Add copy functionality
+    linkText.addEventListener('click', function(e) {
+        e.preventDefault();
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            linkText.textContent = 'Link copied! ❤️';
+            setTimeout(() => {
+                linkText.textContent = 'Share this Valentine';
+            }, 2000);
+        });
+    });
+    
+    shareLink.appendChild(linkText);
+    document.body.appendChild(shareLink);
+</script>
+</body>
+</html>
+<script>
+    // ... existing code ...
+
+    // Start with some floating hearts
+    setTimeout(createFloatingHearts, 1000);
+
+    // Generate a shareable link
+    const shareLink = document.createElement('div');
+    shareLink.style.position = 'fixed';
+    shareLink.style.bottom = '10px';
+    shareLink.style.left = '50%';
+    shareLink.style.transform = 'translateX(-50%)';
+    shareLink.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+    shareLink.style.padding = '8px 15px';
+    shareLink.style.borderRadius = '20px';
+    shareLink.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.2)';
+    shareLink.style.fontSize = '14px';
+    shareLink.style.zIndex = '100';
+
+    const linkText = document.createElement('a');
+    linkText.href = window.location.href;
+    linkText.textContent = 'Share this Valentine';
+    linkText.style.color = '#ff3e6f';
+    linkText.style.textDecoration = 'none';
+    linkText.style.fontWeight = 'bold';
+    linkText.href = "#";
+
+    // Add copy functionality
+    linkText.addEventListener('click', function(e) {
+        e.preventDefault();
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            linkText.textContent = 'Link Copied!';
+            setTimeout(() => {
+                linkText.textContent = 'Share this Valentine';
+            }, 2000);
+        }).catch(err => {
+            linkText.textContent = 'Failed to copy';
+            console.error('Clipboard error:', err);
+        });
+    });
+
+    shareLink.appendChild(linkText);
+    document.body.appendChild(shareLink);
+</script>
